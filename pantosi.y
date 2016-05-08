@@ -4,14 +4,20 @@
 	#include <string.h>
 	#include <sys/types.h>
 	#include <unistd.h>
+	#include <sys/stat.h>
+	#include <signal.h>
 
 	extern int yylex();
 	extern int yyparse();
 	extern FILE* yyin;
 
-void yyerror(const char* s);
+void yyerror(const char *s);
 void newCommand();
+void pmkdir(char *dir);
+void prmdir(char *dir);
+
 int error = 0;
+int errorCount = 0;
 %}
 
 %union {
@@ -53,26 +59,26 @@ int error = 0;
 %%
 
 pantosiShell:
-	| pantosiShell line
+	| pantosiShell line {errorCount = 0;}
 ;
 
 line: N
 	| pchar N           {newCommand();}
-	| expression N      {if(error == 0) printf("%d", $1); newCommand(); error = 0;}
-	| floatExpression N {if(error == 0) printf("%f", $1); newCommand(); error = 0;}
+	| expression N      {if(error == 0 && errorCount == 0){ printf("%d\n", $1); newCommand();} error = 0;}
+	| floatExpression N {if(error == 0 && errorCount == 0){ printf("%f\n", $1); newCommand();} error = 0;}
 ;
 
 expression: expression PLUS term       {$$ = $1 + $3;}
 	|       expression MINUS term      {$$ = $1 - $3;}
 	|       expression TIMES term      {$$ = $1 * $3;}
-	|       expression DIVIDED_BY term {if($3 != 0) $$ = $1 / $3; else {error = 1; printf("erro, nao existe divisao por zero");}}
+	|       expression DIVIDED_BY term {if($3 != 0) $$ = $1 / $3; else {error = 1; printf("erro, nao existe divisao por zero\n"); newCommand();}}
 	|       term 			           {$$ = $1;}
 ;
 
 floatExpression: floatExpression PLUS floatTerm       {$$ = $1 + $3;}
 	|	         floatExpression MINUS floatTerm      {$$ = $1 - $3;}
 	|			 floatExpression TIMES floatTerm      {$$ = $1 * $3;}
-	|			 floatExpression DIVIDED_BY floatTerm {if($3 != 0) $$ = $1 / $3; else {error = 1; printf("erro, nao existe divisao por zero");}}
+	|			 floatExpression DIVIDED_BY floatTerm {if($3 != 0) $$ = $1 / $3; else {error = 1; printf("erro, nao existe divisao por zero\n"); newCommand();}}
 	|			 floatTerm					          {$$ = $1;}
 ;
 
@@ -82,13 +88,18 @@ term:  INT {$$ = $1;}
 floatTerm: FLOAT {$$ = $1;}
 ;
 
-pchar: LS           {printf("Teste LS");}
-	|  PS     		{printf("Teste PS");}
-	|  KLL STRING	{printf("Teste KLL");}
-	|  MKDIR STRING {printf("Teste MKDIR");}
-	|  RMDIR STRING	{printf("Teste RMDIR");}
+pchar: LS           {system("/bin/ls");}
+	|  PS     		{system("/bin/ps");}
+	|  KLL INT	    {
+						char str[100];
+						sprintf(str, "%d", $2);
+						kill(atoi(str), SIGKILL);
+					}
+	|  MKDIR STRING {pmkdir($2);}
+	|  RMDIR STRING	{prmdir($2);}
 	|  CD STRING	{printf("Teste CD");}
 	|  TOUCH STRING	{printf("Teste TOUCH");}
+	|  IFCONFIG     {system("ifconfig");}
 	|  START STRING {printf("Teste START");}
 	|  QUIT 		{exit(0);}
 ;
@@ -108,14 +119,35 @@ int main() {
 }
 
 void yyerror(const char* s) {
-	printf("Comando invalido %s", s);
-	newCommand();
+	if(errorCount == 0) {
+		fprintf(stderr, "Comando invalido %s\n", s);
+		newCommand();
+	}
+	errorCount++;
 }
 
 void newCommand() {
 	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != NULL)
-		printf("\npantosiShell:%s ", cwd);
+		printf("pantosiShell:%s ", cwd);
 	else
 		perror("getcwd() error");
+}
+
+void pmkdir(char *dir) {
+	struct stat st = {0};
+
+	if(stat(dir, &st) == -1)
+		mkdir(dir, 0700);
+	else
+		printf("mkdir: impossivel criar o diretorio \"%s\": Arquivo existe\n", dir);
+}
+
+void prmdir(char *dir) {
+	struct stat st = {0};
+
+	if(stat(dir, &st) == 0)
+		rmdir(dir);
+	else
+		printf("rmdir: falhou em remover \"%s\": Arquivo ou diretorio nao encontrado\n", dir);
 }
