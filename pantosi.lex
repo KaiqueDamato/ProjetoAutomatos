@@ -25,7 +25,7 @@
 "/"        {return DIVIDED_BY;}
 
 \n                        {return N;}
-[0-9]*[a-zA-Z]+[0-9]*     {yylval.text = (yytext); return STRING;}
+[0-9]*[a-zA-Z.]+[0-9]*    {yylval.text = (yytext); return STRING;}
 
 [0-9]+\.[0-9]+      	  {yylval.f = atof(yytext); return FLOAT;}
 [0-9]+			   		  {yylval.i = atoi(yytext); return INT;}

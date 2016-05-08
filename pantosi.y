@@ -15,6 +15,11 @@ void yyerror(const char *s);
 void newCommand();
 void pmkdir(char *dir);
 void prmdir(char *dir);
+void pstart(char *program);
+void pkill(int i);
+void ptouch(char *file);
+void floatDivision(float a, float b);
+void intDivision(int a, int b);
 
 int error = 0;
 int errorCount = 0;
@@ -118,21 +123,13 @@ floatTerm: FLOAT {$$ = $1;}
 
 pchar: LS           {system("/bin/ls");}
 	|  PS     		{system("/bin/ps");}
-	|  KLL INT	    {
-						char str[100];
-						sprintf(str, "%d", $2);
-						kill(atoi(str), SIGKILL);
-					}
+	|  KLL INT	    {pkill($2);}
 	|  MKDIR STRING {pmkdir($2);}
 	|  RMDIR STRING	{prmdir($2);}
 	|  CD STRING	{printf("Teste CD");}
-	|  TOUCH STRING	{
-						char command[256];
-						snprintf(command, sizeof command, "touch -am -t 200005050000 %s", $2);
-						system(command);
-				    }
+	|  TOUCH STRING	{ptouch($2);}
 	|  IFCONFIG     {system("ifconfig");}
-	|  START STRING {system(strcat($2,"&"));}
+	|  START STRING {pstart($2);}
 	|  QUIT 		{exit(0);}
 ;
 
@@ -182,4 +179,29 @@ void prmdir(char *dir) {
 		rmdir(dir);
 	else
 		printf("rmdir: falhou em remover \"%s\": Arquivo ou diretorio nao encontrado\n", dir);
+}
+
+void pstart(char *program) {
+	char str[256];
+	snprintf(str, sizeof str, "%s&", program);
+
+	if(fork() == 0) {
+		system(str);
+		exit(0);
+	}
+}
+
+void pkill(int i) {
+	char str[100];
+	sprintf(str, "%d", i);
+	int status = kill(atoi(str), SIGKILL);
+	if(status == -1) {
+		printf("kill: (%d) - Processo inexistente ou operacao nao permitida\n", i);
+	}
+}
+
+void ptouch(char *file) {
+	char command[256];
+	snprintf(command, sizeof command, "touch -am -t 200005050000 %s", file);
+	system(command);
 }
