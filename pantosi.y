@@ -32,13 +32,17 @@ void newCommand();
 %token QUIT
 %token N
 %token STRING
+%token SUM
 
 %token<i> INT
 %token<f> FLOAT
-%start pantosiShell
 
 %type<c> pchar
 %type<text> STRING
+%type<i>expression
+%type<i>term
+
+%start pantosiShell
 
 %%
 
@@ -48,6 +52,14 @@ pantosiShell:
 
 line: N
 	| pchar N {newCommand();}
+	| expression N {printf("%d", $1); newCommand();}
+;
+
+expression: expression SUM term {$$ = $1 + $3;}
+	|       term 			    {$$ = $1;}
+
+term:  INT    {$$ = $1;}
+	|  FLOAT  {$$ = $1;}
 ;
 
 pchar: LS               {printf("Teste LS");}
@@ -76,7 +88,7 @@ int main() {
 }
 
 void yyerror(const char* s) {
-	fprintf(stderr, "Comando invalido %s", s);
+	printf("Comando invalido %s", s);
 	newCommand();
 }
 
