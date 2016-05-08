@@ -64,22 +64,50 @@ pantosiShell:
 
 line: N
 	| pchar N           {newCommand();}
-	| expression N      {if(error == 0 && errorCount == 0){ printf("%d\n", $1); newCommand();} error = 0;}
-	| floatExpression N {if(error == 0 && errorCount == 0){ printf("%f\n", $1); newCommand();} error = 0;}
+	| expression N      {
+		             		if(error == 0 && errorCount == 0) { 
+		             			printf("%d\n", $1); 
+		             			newCommand();
+		             		} 
+		             		error = 0;
+				        }
+	| floatExpression N {
+		                	if(error == 0 && errorCount == 0) { 
+		                		printf("%f\n", $1); 
+		                		newCommand();
+		                	}
+		                	error = 0;
+                     	}
 ;
 
-expression: expression PLUS term       {$$ = $1 + $3;}
+expression: term 			           {$$ = $1;}
+	|       expression PLUS term       {$$ = $1 + $3;}
 	|       expression MINUS term      {$$ = $1 - $3;}
 	|       expression TIMES term      {$$ = $1 * $3;}
-	|       expression DIVIDED_BY term {if($3 != 0) $$ = $1 / $3; else {error = 1; printf("erro, nao existe divisao por zero\n"); newCommand();}}
-	|       term 			           {$$ = $1;}
+	|       expression DIVIDED_BY term {
+											if($3 != 0) 
+												$$ = $1 / $3; 
+											else {
+												error = 1; 
+												printf("erro, nao existe divisao por zero\n"); 
+												newCommand();
+											}
+									   }
 ;
 
-floatExpression: floatExpression PLUS floatTerm       {$$ = $1 + $3;}
+floatExpression: floatTerm					          {$$ = $1;}
+	|			 floatExpression PLUS floatTerm       {$$ = $1 + $3;}
 	|	         floatExpression MINUS floatTerm      {$$ = $1 - $3;}
 	|			 floatExpression TIMES floatTerm      {$$ = $1 * $3;}
-	|			 floatExpression DIVIDED_BY floatTerm {if($3 != 0) $$ = $1 / $3; else {error = 1; printf("erro, nao existe divisao por zero\n"); newCommand();}}
-	|			 floatTerm					          {$$ = $1;}
+	|			 floatExpression DIVIDED_BY floatTerm {
+												      		if($3 != 0) 
+																$$ = $1 / $3; 
+															else {
+																error = 1; 
+																printf("erro, nao existe divisao por zero\n"); 
+																newCommand();
+															}
+													  }
 ;
 
 term:  INT {$$ = $1;}
@@ -98,9 +126,13 @@ pchar: LS           {system("/bin/ls");}
 	|  MKDIR STRING {pmkdir($2);}
 	|  RMDIR STRING	{prmdir($2);}
 	|  CD STRING	{printf("Teste CD");}
-	|  TOUCH STRING	{printf("Teste TOUCH");}
+	|  TOUCH STRING	{
+						char command[256];
+						snprintf(command, sizeof command, "touch -am -t 200005050000 %s", $2);
+						system(command);
+				    }
 	|  IFCONFIG     {system("ifconfig");}
-	|  START STRING {printf("Teste START");}
+	|  START STRING {system(strcat($2,"&"));}
 	|  QUIT 		{exit(0);}
 ;
 
