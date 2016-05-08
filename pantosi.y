@@ -18,6 +18,7 @@ void prmdir(char *dir);
 void pstart(char *program);
 void pkill(int i);
 void ptouch(char *file);
+void pcd(char *folder);
 
 int error = 0;
 int errorcount = 0;
@@ -53,9 +54,9 @@ int errorcount = 0;
 %type<c> pchar
 %type<text> STRING
 %type<i>expression
-%type<f>floatExpression
+%type<f>floatexpression
 %type<i>term
-%type<f>floatTerm
+%type<f>floatterm
 
 %start pantosiShell
 
@@ -74,7 +75,7 @@ line: N
 		             		} 
 		             		error = 0;
 				        }
-	| floatExpression N {
+	| floatexpression N {
 		                	if(error == 0 && errorcount == 0) { 
 		                		printf("%f\n", $1); 
 		                		newcommand();
@@ -98,11 +99,11 @@ expression: term 			           {$$ = $1;}
 									   }
 ;
 
-floatExpression: floatTerm					          {$$ = $1;}
-	|			 floatExpression PLUS floatTerm       {$$ = $1 + $3;}
-	|	         floatExpression MINUS floatTerm      {$$ = $1 - $3;}
-	|			 floatExpression TIMES floatTerm      {$$ = $1 * $3;}
-	|			 floatExpression DIVIDED_BY floatTerm {
+floatexpression: floatterm					          {$$ = $1;}
+	|			 floatexpression PLUS floatterm       {$$ = $1 + $3;}
+	|	         floatexpression MINUS floatterm      {$$ = $1 - $3;}
+	|			 floatexpression TIMES floatterm      {$$ = $1 * $3;}
+	|			 floatexpression DIVIDED_BY floatterm {
 												      		if($3 != 0) 
 																$$ = $1 / $3; 
 															else {
@@ -116,7 +117,7 @@ floatExpression: floatTerm					          {$$ = $1;}
 term:  INT {$$ = $1;}
 ;
 
-floatTerm: FLOAT {$$ = $1;}
+floatterm: FLOAT {$$ = $1;}
 ;
 
 pchar: LS           {system("/bin/ls");}
@@ -124,7 +125,7 @@ pchar: LS           {system("/bin/ls");}
 	|  KILL INT	    {pkill($2);}
 	|  MKDIR STRING {pmkdir($2);}
 	|  RMDIR STRING	{prmdir($2);}
-	|  CD STRING	{chdir($2);}
+	|  CD STRING	{pcd($2);}
 	|  TOUCH STRING	{ptouch($2);}
 	|  IFCONFIG     {system("ifconfig");}
 	|  START STRING {pstart($2);}
@@ -202,4 +203,10 @@ void ptouch(char *file) {
 	char command[256];
 	snprintf(command, sizeof command, "touch -am -t 200005050000 %s", file);
 	system(command);
+}
+
+void pcd(char *folder) {
+	int status = chdir(folder);
+	if(status != 0)
+		printf("cd: %s: Arquivo ou diretorio nao encontrado\n", folder);
 }
