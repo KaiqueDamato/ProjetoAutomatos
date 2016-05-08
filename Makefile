@@ -1,13 +1,13 @@
-all: shell
+all: clean shell
 
-bison.tab.c bison.tab.h: pantosi.y
+bison.tab.c: pantosi.y
 	bison -d pantosi.y
 
-lex.yy.c: pantosi.lex bison.tab.h
+lex.yy.c: pantosi.lex
 	flex pantosi.lex
 
-shell: lex.yy.c bison.tab.c bison.tab.h
+shell: bison.tab.c lex.yy.c 
 	gcc -o pantosiShell pantosi.tab.c lex.yy.c -lfl
 
 clean:
-	rm pantosiShell pantosi.tab.c lex.yy.c pantosi.tab.h
+	rm -rf pantosiShell pantosi.tab.c lex.yy.c pantosi.tab.h

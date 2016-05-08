@@ -12,17 +12,15 @@
 	extern FILE* yyin;
 
 void yyerror(const char *s);
-void newCommand();
+void newcommand();
 void pmkdir(char *dir);
 void prmdir(char *dir);
 void pstart(char *program);
 void pkill(int i);
 void ptouch(char *file);
-void floatDivision(float a, float b);
-void intDivision(int a, int b);
 
 int error = 0;
-int errorCount = 0;
+int errorcount = 0;
 %}
 
 %union {
@@ -34,7 +32,7 @@ int errorCount = 0;
 
 %token LS
 %token PS
-%token KLL
+%token KILL
 %token MKDIR
 %token RMDIR
 %token CD
@@ -64,22 +62,22 @@ int errorCount = 0;
 %%
 
 pantosiShell:
-	| pantosiShell line {errorCount = 0;}
+	| pantosiShell line {errorcount = 0;}
 ;
 
 line: N
-	| pchar N           {newCommand();}
+	| pchar N           {newcommand();}
 	| expression N      {
-		             		if(error == 0 && errorCount == 0) { 
+		             		if(error == 0 && errorcount == 0) { 
 		             			printf("%d\n", $1); 
-		             			newCommand();
+		             			newcommand();
 		             		} 
 		             		error = 0;
 				        }
 	| floatExpression N {
-		                	if(error == 0 && errorCount == 0) { 
+		                	if(error == 0 && errorcount == 0) { 
 		                		printf("%f\n", $1); 
-		                		newCommand();
+		                		newcommand();
 		                	}
 		                	error = 0;
                      	}
@@ -95,7 +93,7 @@ expression: term 			           {$$ = $1;}
 											else {
 												error = 1; 
 												printf("erro, nao existe divisao por zero\n"); 
-												newCommand();
+												newcommand();
 											}
 									   }
 ;
@@ -110,7 +108,7 @@ floatExpression: floatTerm					          {$$ = $1;}
 															else {
 																error = 1; 
 																printf("erro, nao existe divisao por zero\n"); 
-																newCommand();
+																newcommand();
 															}
 													  }
 ;
@@ -123,10 +121,10 @@ floatTerm: FLOAT {$$ = $1;}
 
 pchar: LS           {system("/bin/ls");}
 	|  PS     		{system("/bin/ps");}
-	|  KLL INT	    {pkill($2);}
+	|  KILL INT	    {pkill($2);}
 	|  MKDIR STRING {pmkdir($2);}
 	|  RMDIR STRING	{prmdir($2);}
-	|  CD STRING	{printf("Teste CD");}
+	|  CD STRING	{chdir($2);}
 	|  TOUCH STRING	{ptouch($2);}
 	|  IFCONFIG     {system("ifconfig");}
 	|  START STRING {pstart($2);}
@@ -138,7 +136,7 @@ pchar: LS           {system("/bin/ls");}
 int main() {
 	yyin = stdin;
 
-	newCommand();
+	newcommand();
 
 	do{
 		yyparse();
@@ -148,14 +146,14 @@ int main() {
 }
 
 void yyerror(const char* s) {
-	if(errorCount == 0) {
+	if(errorcount == 0) {
 		fprintf(stderr, "Comando invalido %s\n", s);
-		newCommand();
+		newcommand();
 	}
-	errorCount++;
+	errorcount++;
 }
 
-void newCommand() {
+void newcommand() {
 	char cwd[1024];
 	if (getcwd(cwd, sizeof(cwd)) != NULL)
 		printf("pantosiShell:%s ", cwd);

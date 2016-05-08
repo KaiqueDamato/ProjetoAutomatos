@@ -10,7 +10,7 @@
 
 "ls"       {return LS;}
 "ps"       {return PS;}
-"kill"     {return KLL;}
+"kill"     {return KILL;}
 "mkdir"    {return MKDIR;}
 "rmdir"    {return RMDIR;}
 "cd"       {return CD;}
@@ -24,11 +24,11 @@
 "*"        {return TIMES;}
 "/"        {return DIVIDED_BY;}
 
-\n                        {return N;}
-[0-9]*[a-zA-Z.]+[0-9]*    {yylval.text = (yytext); return STRING;}
+\n                              {return N;}
+[a-zA-Z.~][a-zA-Z.~]*             {yylval.text = (yytext); return STRING;}
 
-[0-9]+\.[0-9]+      	  {yylval.f = atof(yytext); return FLOAT;}
-[0-9]+			   		  {yylval.i = atoi(yytext); return INT;}
-[ \t]              		  {;}
+[0-9]+\.[0-9]+      	        {yylval.f = atof(yytext); return FLOAT;}
+[0-9]+			   		        {yylval.i = atoi(yytext); return INT;}
+[ \t]              		        {;}
 
 %%
