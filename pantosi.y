@@ -47,6 +47,11 @@ int errorcount = 0;
 %token MINUS
 %token TIMES
 %token DIVIDED_BY
+%token AP
+%token FP
+
+%left PLUS MINUS
+%left TIMES DIVIDED_BY
 
 %token<i> INT
 %token<f> FLOAT
@@ -84,34 +89,36 @@ line: N
                      	}
 ;
 
-expression: term 			           {$$ = $1;}
-	|       expression PLUS term       {$$ = $1 + $3;}
-	|       expression MINUS term      {$$ = $1 - $3;}
-	|       expression TIMES term      {$$ = $1 * $3;}
-	|       expression DIVIDED_BY term {
-											if($3 != 0) 
-												$$ = $1 / $3; 
-											else {
-												error = 1; 
-												printf("erro, nao existe divisao por zero\n"); 
-												newcommand();
+expression: term 			                 {$$ = $1;}
+	|       AP expression FP			     {$$ = $2;}
+	|       expression PLUS expression       {$$ = $1 + $3;}
+	|       expression MINUS expression 	 {$$ = $1 - $3;}
+	|       expression TIMES expression      {$$ = $1 * $3;}
+	|       expression DIVIDED_BY expression {
+												if($3 != 0) 
+													$$ = $1 / $3; 
+												else {
+													error = 1; 
+													printf("erro, nao existe divisao por zero\n"); 
+													newcommand();
+												}
 											}
-									   }
 ;
 
-floatexpression: floatterm					          {$$ = $1;}
-	|			 floatexpression PLUS floatterm       {$$ = $1 + $3;}
-	|	         floatexpression MINUS floatterm      {$$ = $1 - $3;}
-	|			 floatexpression TIMES floatterm      {$$ = $1 * $3;}
-	|			 floatexpression DIVIDED_BY floatterm {
-												      		if($3 != 0) 
-																$$ = $1 / $3; 
-															else {
-																error = 1; 
-																printf("erro, nao existe divisao por zero\n"); 
-																newcommand();
-															}
-													  }
+floatexpression: floatterm					                {$$ = $1;}
+	|			 AP floatexpression FP					    {$$ = $2;}
+	|			 floatexpression PLUS floatexpression       {$$ = $1 + $3;}
+	|	         floatexpression MINUS floatexpression      {$$ = $1 - $3;}
+	|			 floatexpression TIMES floatexpression      {$$ = $1 * $3;}
+	|			 floatexpression DIVIDED_BY floatexpression {
+												      			if($3 != 0) 
+																	$$ = $1 / $3; 
+																else {
+																	error = 1; 
+																	printf("erro, nao existe divisao por zero\n"); 
+																	newcommand();
+																}
+													  		}
 ;
 
 term:  INT {$$ = $1;}
